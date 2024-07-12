@@ -1,0 +1,23 @@
+{
+	"name": "ray/lyrical-php",
+	"description": "PHP program for retrieving, storing, and displaying song lyrics",
+	"type": "project",
+	"autoload": {
+		"files": [
+			"./src/utils.php"
+		],
+		"psr-4": {
+			"App\\": "./src"
+		}
+	},
+	"license": "",
+	"authors": [
+		{
+			"name": "Raymon Roos",
+			"email": "raymon.roos@hotmail.com"
+		}
+	],
+	"require": {
+		"guzzlehttp/guzzle": "^7.8"
+	}
+}
