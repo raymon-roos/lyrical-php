@@ -147,12 +147,11 @@ class Lyrical
     private function formatLyricsText(\DOMNodeList $nodes): string
     {
         $lyrics = '';
-        $NL = PHP_EOL;
 
         foreach ($nodes as $node) {
             // New line for sections like '[Chorus]'
             if (trim($node->textContent, '[]') !== $node->textContent) {
-                $lyrics .= $NL;
+                $lyrics .= PHP_EOL;
             }
 
             if (!empty($node->textContent)) {
@@ -161,9 +160,9 @@ class Lyrical
                 $lyrics .= wordwrap(
                     preg_replace(
                         '/([)a-z])([A-Z(])/',
-                        "\\1$NL\\2",
+                        '$1' . PHP_EOL . '$2',
                         $node->textContent
-                    ) . $NL,
+                    ) . PHP_EOL,
                     50
                 );
             }
