@@ -110,11 +110,11 @@ class Lyrical
                     ->get("$lyricsUrl")
                     ->getBody()
                     ->getContents(),
-                LIBXML_NOWARNING | LIBXML_NOERROR
+                LIBXML_NOWARNING | LIBXML_NOERROR | LIBXML_NOBLANKS
             );
 
-            return $doc->getElementById('lyrics-root')
-                ->childNodes;
+        return $doc->getElementById('lyrics-root')
+            ->childNodes;
     }
 
     /**
@@ -145,18 +145,28 @@ class Lyrical
     private function formatLyricsText(\DOMNodeList $nodes): string
     {
         $lyrics = '';
+        $NL = PHP_EOL;
 
         foreach ($nodes as $node) {
-            if (empty($node->textContent)) {
-                continue;
-            }
             // New line for sections like '[Chorus]'
             if (trim($node->textContent, '[]') !== $node->textContent) {
-                $lyrics .= PHP_EOL;
+                $lyrics .= $NL;
             }
-            $lyrics .= $node->textContent . PHP_EOL;
+
+            if (!empty($node->textContent)) {
+                // Workaround for punctuation being lost because <br> inside of <span>
+                // not being handled by PHP's HTML parser.
+                $lyrics .= wordwrap(
+                    preg_replace(
+                        '/([)a-z])([A-Z(])/',
+                        "\\1$NL\\2",
+                        $node->textContent
+                    ) . $NL,
+                    50
+                );
+            }
         }
 
-        return trim(wordwrap($lyrics, 80));
+        return $lyrics;
     }
 }
