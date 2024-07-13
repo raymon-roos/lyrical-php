@@ -10,6 +10,8 @@ class Lyrical
 {
     private GuzzleHttp\Client $client;
 
+    private ?string $url;
+
     public function __construct()
     {
         $this->client = new GuzzleHttp\Client([
@@ -33,7 +35,7 @@ class Lyrical
     {
         return $this->extractLyrics(
             $this->getLyricsDomNodes(
-                $this->getLyricsUrl($title, $artist)
+                $this->url = $this->getLyricsUrl($title, $artist)
             )
         );
     }
@@ -122,7 +124,7 @@ class Lyrical
      */
     private function extractLyrics(\DOMNodeList $nodes): string
     {
-        $lyrics = '';
+        $lyrics = "Retrieved from: {$this->url}" . PHP_EOL;
 
         foreach ($nodes as $node) {
             if (str_contains($node->className, 'Lyrics__Container')) {
