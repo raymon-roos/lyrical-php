@@ -104,16 +104,14 @@ class Lyrical
     *
     * @param string $lyricsUrl URL to a Genius song page containing lyrics
     */
-    private function getLyricsDomNodes(string $lyricsUrl): \DOMNodeList
+    private function getLyricsDomNodes(string $lyricsUrl): \Dom\NodeList
     {
-        ($doc = new \DOMDocument())
-            ->loadHTML(
-                $this->client
+        $doc = $this->client
                     ->get("$lyricsUrl")
                     ->getBody()
-                    ->getContents(),
-                LIBXML_NOWARNING | LIBXML_NOERROR | LIBXML_NOBLANKS
-            );
+                    ->getContents();
+        $doc = str_replace(['<br>', '<br/>', '<br />'], PHP_EOL, $doc);
+        $doc = \Dom\HTMLDocument::createFromString($doc, LIBXML_NOERROR);
 
         return $doc->getElementById('lyrics-root')
             ->childNodes;
@@ -122,52 +120,16 @@ class Lyrical
     /**
      * Pull lyrics strings out of DOM nodes containing lyrics
      */
-    private function extractLyrics(\DOMNodeList $nodes): string
+    private function extractLyrics(\Dom\NodeList $nodes): string
     {
         $lyrics = "Retrieved from: {$this->url}" . PHP_EOL;
 
         foreach ($nodes as $node) {
-            if (str_contains($node->className, 'Lyrics__Container')) {
-                $lyrics .= $this->formatLyricsText($node->childNodes);
+            if ($node->getAttribute('data-lyrics-container') === 'true') {
+                $lyrics .=  PHP_EOL . $node->textContent;
             }
         }
 
-        return $lyrics;
-    }
-
-    /**
-     * Nicely format an un-punctuated input lyrics string.
-     *
-     * Bars of lyrics are separated with `<br>` elements, which are
-     * lost when calling `->textContent`. As such, new lines have
-     * to be added between nodes.
-     *
-     * @return string formatted plain text lyrics.
-     */
-    private function formatLyricsText(\DOMNodeList $nodes): string
-    {
-        $lyrics = '';
-
-        foreach ($nodes as $node) {
-            // New line for sections like '[Chorus]'
-            if (trim($node->textContent, '[]') !== $node->textContent) {
-                $lyrics .= PHP_EOL;
-            }
-
-            if (!empty($node->textContent)) {
-                // Workaround for punctuation being lost because <br> inside of <span>
-                // not being handled by PHP's HTML parser.
-                $lyrics .= wordwrap(
-                    preg_replace(
-                        '/([)a-z])([A-Z(])/',
-                        '$1' . PHP_EOL . '$2',
-                        $node->textContent
-                    ) . PHP_EOL,
-                    50
-                );
-            }
-        }
-
-        return $lyrics;
+        return $lyrics . PHP_EOL;
     }
 }
